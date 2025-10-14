@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mi Perfil</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f0fdf4;
+            margin: 0;
+            padding: 0;
+        }
+        .contenedor {
+            max-width: 800px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        h2 {
+            text-align: center;
+            color: #2e7d32;
+            margin-bottom: 30px;
+        }
+        .btn-volver {
+            display: inline-block;
+            background-color: #2e7d32;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-bottom: 20px;
+            transition: background-color 0.3s ease;
+        }
+        .btn-volver:hover {
+            background-color: #1b5e20;
+        }
+        .perfil {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .foto-perfil {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background-color: #e8f5e9;
+            background-size: cover;
+            background-position: center;
+            border: 2px solid #81c784;
+        }
+        .datos {
+            flex: 1;
+        }
+        .datos p {
+            margin: 10px 0;
+            color: #333;
+        }
+        .datos strong {
+            color: #2e7d32;
+        }
+        .nota-descripcion {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        textarea {
+            width: 100%;
+            height: 80px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            resize: vertical;
+        }
+        form {
+            margin-top: 20px;
+        }
+        input[type="email"],
+        input[type="password"],
+        input[type="file"] {
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .input-corto {
+            width: 250px;
+        }
+        button {
+            background-color: #2e7d32;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #1b5e20;
+        }
+        .acciones {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="contenedor">
+        <a href="{{ url_for('inicio') }}" class="btn-volver">← Volver a la pantalla principal</a>
+        <h2>👤 Mi Perfil</h2>
+
+        <div class="perfil">
+            <div class="foto-perfil" style="background-image: url('{{ url_for('static', filename='perfiles/' + foto_perfil) }}');"></div>
+
+            <div class="datos">
+                <p><strong>Nombre de usuario:</strong> {{ usuario }}</p>
+                <p><strong>Correo electrónico:</strong> {{ correo }}</p>
+                <p><strong>Rol:</strong> {{ rol }}</p>
+                <p><strong>Pequeño recordatorio:</strong> {{ descripcion }}</p>
+            </div>
+        </div>
+
+        <form action="{{ url_for('actualizar_descripcion') }}" method="POST">
+            <label for="nueva_descripcion"><strong>Editar pequeño recordatorio:</strong></label>
+            <p class="nota-descripcion">Este espacio es tuyo. Puedes escribir lo que consideres importante</p>
+            <textarea name="nueva_descripcion" required>{{ descripcion }}</textarea>
+            <button type="submit">Guardar recordatorio</button>
+        </form>
+
+        <form action="{{ url_for('subir_foto') }}" method="POST" enctype="multipart/form-data">
+            <label for="foto"><strong>Subir nueva foto de perfil:</strong></label>
+            <input type="file" name="foto" accept="image/*" required>
+            <button type="submit">Guardar foto</button>
+        </form>
+
+        <div class="acciones">
+            <form action="{{ url_for('actualizar_correo') }}" method="POST" onsubmit="return confirmarCorreo()">
+                <label for="nuevo_correo"><strong>Modificar correo electrónico:</strong></label>
+                <input type="email" name="nuevo_correo" class="input-corto" required>
+                <button type="submit">Guardar nuevo correo</button>
+            </form>
+
+            <form action="{{ url_for('actualizar_contrasena') }}" method="POST" onsubmit="return confirmarContrasena()">
+                <label for="nueva_contrasena"><strong>Modificar la contraseña:</strong></label>
+                <input type="password" name="nueva_contrasena" class="input-corto" required>
+                <button type="submit">Guardar nueva contraseña</button>
+            </form>
+
+            <form action="{{ url_for('logout') }}" method="GET">
+                <button type="submit">Cerrar sesión</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function confirmarCorreo() {
+            return confirm("¿Esta seguro de que desea modificar su correo electrónico?");
+        }
+
+        function confirmarContrasena() {
+            return confirm("¿Esta seguro de que desea modificar su contraseña?");
+        }
+    </script>
+</body>
+</html>

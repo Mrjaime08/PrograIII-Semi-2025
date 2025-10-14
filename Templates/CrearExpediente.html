@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Crear Expediente</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f0fdf4;
+            padding: 30px;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        nav {
+            background-color: #e8f5e9;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-around;
+            border-bottom: 1px solid #c8e6c9;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #2e7d32;
+            font-weight: bold;
+            font-size: 1em;
+        }
+
+        .boton-ia {
+            background-color: #f8bbd0;
+            padding: 8px 14px;
+            border-radius: 6px;
+            color: #880e4f;
+            font-weight: bold;
+            text-decoration: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .boton-ia::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, rgba(255,255,255,0.3), rgba(255,255,255,0));
+            transition: left 0.5s ease;
+        }
+
+        .boton-ia:hover::after {
+            left: 100%;
+        }
+
+        .boton-ia:hover {
+            box-shadow: 0 0 12px rgba(248,187,208, 0.6);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2e7d32;
+            margin-top: 20px;
+        }
+
+        form {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: auto;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+            color: #388e3c;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        .btn {
+            margin-top: 20px;
+            padding: 10px 15px;
+            background-color: #66bb6a;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #4caf50;
+        }
+
+        .acciones {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        .foto-preview {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        #imagenVistaPrevia {
+            display: none;
+            max-width: 100%;
+            margin-top: 10px;
+            border-radius: 8px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+
+        footer {
+            background-color: #e8f5e9;
+            text-align: center;
+            padding: 15px;
+            font-size: 0.9em;
+            color: #777;
+            border-top: 1px solid #c8e6c9;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    {% include 'dashboard.html' %}
+
+    <h1>Crear nuevo expediente</h1>
+
+    <form method="POST" action="{{ url_for('guardar_expediente') }}" enctype="multipart/form-data">
+        <label for="nombres">Nombres:</label>
+        <input type="text" name="nombres" required>
+
+        <label for="apellidos">Apellidos:</label>
+        <input type="text" name="apellidos" required>
+
+        <label for="telefono">Teléfono:</label>
+        <input type="text" name="telefono">
+
+        <label for="direccion">Dirección:</label>
+        <input type="text" name="direccion">
+
+        <label for="correo">Correo electrónico:</label>
+        <input type="email" name="correo">
+
+        <label for="edad">Edad:</label>
+        <input type="number" name="edad">
+
+        <label for="enfermedad">Enfermedad:</label>
+        <textarea name="enfermedad" rows="3"></textarea>
+
+        <label for="imagen">Imagen (opcional):</label>
+        <input type="file" name="imagen" id="imagenInput" accept="image/*">
+        <div class="foto-preview" id="fotoPreview">Sin archivos seleccionados</div>
+        <img id="imagenVistaPrevia" src="" alt="Vista previa">
+
+        <button type="button" class="btn" onclick="confirmarEliminarFoto()">Eliminar foto</button>
+
+        <div class="acciones">
+            <button type="submit" class="btn">Crear expediente</button>
+            <button type="button" class="btn" onclick="confirmarCancelar()">Cancelar</button>
+        </div>
+    </form>
+
+    <footer>
+        &copy; 2025 UROMED - Todos los derechos reservados
+    </footer>
+
+    <script>
+        function manejarClickCrearExpediente() {
+            alert("Ya estás en el apartado de 'Crear expediente'.");
+            return false;
+        }
+
+        const imagenInput = document.getElementById('imagenInput');
+        const fotoPreview = document.getElementById('fotoPreview');
+        const imagenVistaPrevia = document.getElementById('imagenVistaPrevia');
+
+        imagenInput.addEventListener('change', function () {
+            if (imagenInput.files.length > 0) {
+                const archivo = imagenInput.files[0];
+                fotoPreview.textContent = archivo.name;
+
+                const lector = new FileReader();
+                lector.onload = function (e) {
+                    imagenVistaPrevia.src = e.target.result;
+                    imagenVistaPrevia.style.display = 'block';
+                };
+                lector.readAsDataURL(archivo);
+            } else {
+                fotoPreview.textContent = 'Sin archivos seleccionados';
+                imagenVistaPrevia.style.display = 'none';
+                imagenVistaPrevia.src = '';
+            }
+        });
+
+        function confirmarCancelar() {
+            const confirmar = confirm("¿Estás seguro de que deseas cancelar el expediente?\nSe perderán los datos ingresados.");
+            if (confirmar) {
+                window.location.href = "{{ url_for('inicio') }}";
+            }
+        }
+
+        function confirmarEliminarFoto() {
+            if (imagenInput.files.length === 0) {
+                alert("No hay ninguna imagen seleccionada.");
+                return;
+            }
+
+            const confirmar = confirm("¿Deseas eliminar la imagen seleccionada?");
+            if (confirmar) {
+                imagenInput.value = "";
+                fotoPreview.textContent = "Sin archivos seleccionados";
+                imagenVistaPrevia.style.display = 'none';
+                imagenVistaPrevia.src = '';
+            }
+        }
+    </script>
+</body>
+</html>

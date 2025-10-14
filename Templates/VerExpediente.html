@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Expediente del paciente</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f0fdf4;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        main {
+            padding: 30px;
+            max-width: 800px;
+            margin: auto;
+        }
+
+        .expediente {
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            color: #2e7d32;
+        }
+
+        h2 {
+            color: #388e3c;
+            margin-bottom: 20px;
+        }
+
+        .campo {
+            margin-bottom: 15px;
+        }
+
+        .campo strong {
+            display: inline-block;
+            width: 150px;
+            color: #33691e;
+        }
+
+        .imagen {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .imagen img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+
+        .acciones {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            background-color: #66bb6a;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.95em;
+        }
+
+        .btn:hover {
+            background-color: #4caf50;
+        }
+
+        footer {
+            background-color: #e8f5e9;
+            text-align: center;
+            padding: 15px;
+            font-size: 0.9em;
+            color: #777;
+            border-top: 1px solid #c8e6c9;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Expediente del paciente</h1>
+    </header>
+
+    <main>
+        <div class="expediente">
+            <h2>{{ expediente.nombres }} {{ expediente.apellidos }}</h2>
+
+            <div class="campo"><strong>ID:</strong> {{ expediente.id }}</div>
+            <div class="campo"><strong>Teléfono:</strong> {{ expediente.telefono }}</div>
+            <div class="campo"><strong>Dirección:</strong> {{ expediente.direccion }}</div>
+            <div class="campo"><strong>Correo electrónico:</strong> {{ expediente.correo }}</div>
+            <div class="campo"><strong>Edad:</strong> {{ expediente.edad }}</div>
+            <div class="campo"><strong>Enfermedad:</strong> {{ expediente.enfermedad }}</div>
+
+            <div class="imagen">
+                <strong>Imagen del paciente:</strong><br><br>
+                {% if expediente.imagen %}
+                    <img src="{{ url_for('static', filename='uploads/' ~ expediente.imagen) }}" alt="Imagen del paciente">
+                {% else %}
+                    <p style="color: #888;">No se ha subido ninguna imagen.</p>
+                {% endif %}
+            </div>
+
+            <div class="acciones">
+                <a href="{{ url_for('modificar_expediente', id=expediente.id) }}">
+                    <button class="btn">Modificar</button>
+                </a>
+                <a href="{{ url_for('inicio') }}">
+                    <button class="btn">Volver</button>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        &copy; 2025 UROMED - Todos los derechos reservados
+    </footer>
+</body>
+</html>

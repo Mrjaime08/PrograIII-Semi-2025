@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>UROMED - Medico IA</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f0fdf4;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        nav {
+            background-color: #e8f5e9;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-around;
+            border-bottom: 1px solid #c8e6c9;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #2e7d32;
+            font-weight: bold;
+            font-size: 1em;
+        }
+
+        .boton-ia {
+            background-color: #f8bbd0;
+            padding: 8px 14px;
+            border-radius: 6px;
+            color: #880e4f;
+            font-weight: bold;
+            text-decoration: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .boton-ia::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, rgba(255,255,255,0.3), rgba(255,255,255,0));
+            transition: left 0.5s ease;
+        }
+
+        .boton-ia:hover::after {
+            left: 100%;
+        }
+
+        .boton-ia:hover {
+            box-shadow: 0 0 12px rgba(248,187,208, 0.6);
+        }
+
+        main {
+            padding: 30px;
+            position: relative;
+        }
+
+        .bienvenida {
+            font-size: 1.2em;
+            color: #388e3c;
+            margin-bottom: 20px;
+        }
+
+        .resumen {
+            background-color: #dcedc8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            color: #33691e;
+            box-shadow: 0 0 5px rgba(0,0,0,0.05);
+        }
+
+        h2 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 0 5px rgba(0,0,0,0.05);
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #c8e6c9;
+            text-align: left;
+        }
+
+        th {
+            background-color: #81c784;
+            color: white;
+        }
+
+        .btn {
+            padding: 8px 12px;
+            background-color: #66bb6a;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .btn:hover {
+            background-color: #4caf50;
+        }
+
+        .btn-eliminar {
+            background-color: #e53935;
+        }
+
+        .btn-eliminar:hover {
+            background-color: #c62828;
+        }
+
+        footer {
+            background-color: #e8f5e9;
+            text-align: center;
+            padding: 15px;
+            font-size: 0.9em;
+            color: #777;
+            border-top: 1px solid #c8e6c9;
+        }
+
+        .buscador {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .buscador input {
+            padding: 8px;
+            width: 60%;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        .buscador button {
+            padding: 8px 12px;
+            margin-left: 10px;
+        }
+
+        .sugerencias {
+            position: absolute;
+            top: 40px;
+            left: 0;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            width: 60%;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sugerencias li {
+            padding: 8px;
+            cursor: pointer;
+            font-family: 'Segoe UI';
+        }
+
+        .sugerencias li:hover {
+            background-color: #e8f5e9;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>UROMED</h1>
+        <p>Medico IA: Asistente de Diagnóstico</p>
+    </header>
+
+    <nav>
+        <a href="{{ url_for('crear_expediente') }}">Crear expediente</a>
+        <a href="#">Historial</a>
+        <a href="{{ url_for('perfil') }}">Mi perfil</a>
+        <a href="#" class="boton-ia">🤖 IA Diagnóstica</a>
+    </nav>
+
+    <main>
+        <div class="bienvenida">Bienvenido, {{ usuario }} ({{ rol }})</div>
+
+        <form method="GET" action="{{ url_for('buscar_expediente') }}" class="buscador">
+            <input type="text" name="query" value="{{ query | default('') }}" placeholder="Buscar paciente o diagnóstico..." autocomplete="off">
+            <button type="submit" class="btn">Buscar</button>
+            <ul class="sugerencias" style="display: none;"></ul>
+        </form>
+
+        <div class="resumen">
+            <strong>Resumen clínico del día:</strong><br>
+            - {{ total_expedientes }} expedientes registrados<br>
+            - 2 diagnósticos IA generados<br>
+            - 1 expediente pendiente de revisión
+        </div>
+
+        <h2>Diagnóstico IA</h2>
+        <table>
+            <tr>
+                <th>Fecha</th>
+                <th>Diagnóstico IA</th>
+                <th>Acciones</th>
+            </tr>
+            {% if expedientes %}
+                {% for expediente in expedientes %}
+                <tr>
+                    <td>{{ fecha_actual }}</td>
+                    <td>{{ expediente[1] }} {{ expediente[2] }} - {{ expediente[3] }}</td>
+                    <td>
+                        <a href="{{ url_for('ver_expediente', id=expediente[0]) }}">
+                            <button class="btn">Ver Expediente</button>
+                        </a>
+                        <button class="btn btn-eliminar" onclick="confirmarEliminacion({{ expediente[0] | tojson }})">Eliminar</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="3" style="text-align: center; color: #888;">
+                        No se encontraron resultados para "{{ query }}"
+                    </td>
+                </tr>
+            {% endif %}
+        </table>
+
+        <br>
+        <button class="btn" onclick="window.history.back()">Atrás</button>
+    </main>
+
+    <footer>
+        &copy; 2025 UROMED - Todos los derechos reservados
+    </footer>
+
+    <script>
+        function confirmarEliminacion(id) {
+            const confirmar = confirm("¿Estás seguro de que deseas eliminar este expediente?");
+            if (confirmar) {
+                window.location.href = "/eliminar_expediente/" + id;
+            }
+        }
+
+        const inputBusqueda = document.querySelector('input[name="query"]');
+        const sugerenciasBox = document.querySelector('.sugerencias');
+
+        // Evento para mostrar sugerencias mientras escribes
+        inputBusqueda.addEventListener('input', async () => {
+            const query = inputBusqueda.value.trim();
+            
+            if (query.length < 2) {
+                sugerenciasBox.style.display = 'none';
+                sugerenciasBox.innerHTML = '';
+                return;
+            }
+
+            try {
+                const res = await fetch(`/sugerencias?term=${encodeURIComponent(query)}`);
+                const data = await res.json();
+
+                sugerenciasBox.innerHTML = '';
+                
+                if (data.length === 0) {
+                    sugerenciasBox.style.display = 'none';
+                    return;
+                }
+
+                // Crear elementos de lista para cada sugerencia
+                data.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = item;
+                    
+                    // Al hacer clic en una sugerencia, llenar el input y buscar
+                    li.addEventListener('click', () => {
+                        inputBusqueda.value = item;
+                        sugerenciasBox.style.display = 'none';
+                        // Enviar el formulario automáticamente
+                        document.querySelector('.buscador').submit();
+                    });
+                    
+                    sugerenciasBox.appendChild(li);
+                });
+                
+                sugerenciasBox.style.display = 'block';
+            } catch (error) {
+                console.error('Error al obtener sugerencias:', error);
+                sugerenciasBox.style.display = 'none';
+            }
+        });
+
+        // Ocultar sugerencias al hacer clic fuera del input
+        document.addEventListener('click', (e) => {
+            if (!inputBusqueda.contains(e.target) && !sugerenciasBox.contains(e.target)) {
+                sugerenciasBox.style.display = 'none';
+            }
+        });
+
+        // Prevenir que se oculten las sugerencias al hacer clic en ellas
+        sugerenciasBox.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    </script>
+</body>
+</html>

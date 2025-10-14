@@ -1,0 +1,15 @@
+<header>
+    <h1>UROMED</h1>
+    <p>Medico IA: Asistente de Diagnóstico</p>
+</header>
+
+<nav>
+    <a href="{{ url_for('crear_expediente') }}" onclick="return manejarClickCrearExpediente()">Crear expediente</a>
+    <a href="#">Historial</a>
+    <a href="{{ url_for('perfil') }}">Mi perfil</a>
+    <a href="#" class="boton-ia">🤖 IA Diagnóstica</a>
+</nav>
+
+{% if usuario and rol %}
+    <div class="bienvenida">Bienvenido, {{ usuario }} ({{ rol }})</div>
+{% endif %}
