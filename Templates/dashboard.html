@@ -1,15 +1,39 @@
-<header>
-    <h1>UROMED</h1>
-    <p>Medico IA: Asistente de Diagnóstico</p>
-</header>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UROMED - {% block title %}Dashboard{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}">
+</head>
+<body>
+    <header class="encabezado-verde">
+        <h1>UROMED</h1>
+        <p>Medico IA: Asistente de Diagnóstico</p>
+    </header>
 
-<nav>
-    <a href="{{ url_for('crear_expediente') }}" onclick="return manejarClickCrearExpediente()">Crear expediente</a>
-    <a href="#">Historial</a>
-    <a href="{{ url_for('perfil') }}">Mi perfil</a>
-    <a href="#" class="boton-ia">🤖 IA Diagnóstica</a>
-</nav>
+    <nav class="menu-principal">
+        <a href="{{ url_for('inicio') }}">🏠 Inicio</a>
+        <a href="{{ url_for('crear_expediente') }}">📄 Crear expediente</a>
+        <a href="{{ url_for('historial') }}">📋 Historial</a>
+        <a href="{{ url_for('perfil') }}">👤 Mi perfil</a>
+        <a href="#" class="boton-ia activo">🤖 IA Diagnóstica</a>
+        <a href="{{ url_for('logout') }}" class="cerrar-sesion">🔒 Cerrar sesión</a>
+    </nav>
 
-{% if usuario and rol %}
-    <div class="bienvenida">Bienvenido, {{ usuario }} ({{ rol }})</div>
-{% endif %}
+    {% if usuario and rol %}
+        <div class="bienvenida">Bienvenido, {{ usuario }} ({{ rol }})</div>
+    {% endif %}
+
+    <main>
+        {% block contenido %}
+        {% endblock %}
+    </main>
+
+    <footer class="pie-pagina">
+        <p>&copy; 2025 UROMED - Sistema de Gestión Médica</p>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

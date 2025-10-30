@@ -10,6 +10,7 @@ from email.mime.text import MIMEText
 from email.header import Header
 from email.utils import formataddr
 from dotenv import load_dotenv
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -20,7 +21,11 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 def conectar_sql():
     return pyodbc.connect(
-        "DRIVER={SQL Server};SERVER=JAIME007\\SQLEXPRESS;DATABASE=UROMED;Trusted_Connection=yes;"
+        "DRIVER={ODBC Driver 18 for SQL Server};"
+        "SERVER=DESKTOP-IFV9P3G\\SQLEXPRESS;"
+        "DATABASE=UROMED;"
+        "Trusted_Connection=yes;"
+        "TrustServerCertificate=yes;"
     )
 
 @app.route('/')
@@ -49,8 +54,6 @@ def inicio():
                            total_expedientes=total_expedientes,
                            fecha_actual=fecha_actual)
 
-
-#### APARTADO DE BARRA DE BUSQUEDA DE EXPEDIENTES ###
 @app.route('/buscar_expediente')
 def buscar_expediente():
     if 'usuario_id' not in session:
@@ -60,11 +63,17 @@ def buscar_expediente():
 
     conn = conectar_sql()
     cursor = conn.cursor()
+    
+    # ✅ CORREGIDO: Ahora busca en columnas individuales Y en concatenación completa
     cursor.execute("""
         SELECT id, nombres, apellidos, enfermedad
         FROM expedientes
-        WHERE nombres LIKE ? OR apellidos LIKE ? OR enfermedad LIKE ?
-    """, (f'%{query}%', f'%{query}%', f'%{query}%'))
+        WHERE nombres LIKE ? 
+           OR apellidos LIKE ? 
+           OR enfermedad LIKE ?
+           OR CONCAT(nombres, ' ', apellidos, ' - ', enfermedad) LIKE ?
+    """, (f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%'))
+    
     expedientes = cursor.fetchall()
 
     cursor.execute("SELECT COUNT(*) FROM expedientes")
@@ -84,7 +93,6 @@ def buscar_expediente():
                            query=query,
                            fecha_actual=fecha_actual)
 
-#### APARTADO DE BARRA DE BUSQUEDA DE EXPEDIENTES (sugerencias)###
 
 @app.route('/sugerencias')
 def sugerencias():
@@ -98,11 +106,17 @@ def sugerencias():
     try:
         conn = conectar_sql()
         cursor = conn.cursor()
+        
+        # ✅ CORREGIDO: Ahora también busca en concatenación completa
         cursor.execute("""
             SELECT TOP 10 nombres, apellidos, enfermedad
             FROM expedientes
-            WHERE LOWER(nombres) LIKE ? OR LOWER(apellidos) LIKE ? OR LOWER(enfermedad) LIKE ?
-        """, (f'%{term}%', f'%{term}%', f'%{term}%'))
+            WHERE LOWER(nombres) LIKE ? 
+               OR LOWER(apellidos) LIKE ? 
+               OR LOWER(enfermedad) LIKE ?
+               OR LOWER(CONCAT(nombres, ' ', apellidos, ' - ', enfermedad)) LIKE ?
+        """, (f'%{term}%', f'%{term}%', f'%{term}%', f'%{term}%'))
+        
         resultados = cursor.fetchall()
         conn.close()
     except Exception as e:
@@ -116,8 +130,6 @@ def sugerencias():
             sugerencias.append(texto)
 
     return jsonify(sugerencias)
-
-#### APARTADO DE EXPEDIENTES ####
 
 @app.route('/crear_expediente')
 def crear_expediente():
@@ -268,8 +280,6 @@ def eliminar_expediente(id):
 
     return redirect(url_for('inicio'))
 
-#### APARTADO DE HISTORIAL ####
-
 @app.route('/historial')
 def historial():
     if 'usuario_id' not in session:
@@ -336,8 +346,6 @@ def historial():
                            fecha_desde=fecha_desde,
                            fecha_hasta=fecha_hasta,
                            buscar=buscar)
-
-#### APARTADO DE PERFIL ####
 
 @app.route('/perfil')
 def perfil():
@@ -434,8 +442,6 @@ def subir_foto():
 
     return redirect(url_for('perfil'))
 
-#### APARTADO DE AUTENTICACIÓN ####
-
 @app.route('/registro')
 def registro():
     return render_template('registro.html')
@@ -492,8 +498,6 @@ def acceder():
 def logout():
     session.clear()
     return redirect(url_for('login'))
-
-#### APARTADO DE RECUPERACIÓN DE CONTRASEÑA ####
 
 def buscar_usuario_por_correo(correo):
     conn = conectar_sql()
@@ -567,7 +571,7 @@ def recuperar_contrasena():
         
         if not correo:
             return render_template('recuperar_contrasena.html', 
-                error="Por favor ingresa un correo electronico.")
+                error="Por favor ingresa un correo electrónico.")
         
         usuario = buscar_usuario_por_correo(correo)
         if usuario:
@@ -576,13 +580,13 @@ def recuperar_contrasena():
             
             if enviar_correo_recuperacion(correo, enlace):
                 return render_template('mensaje.html', 
-                    mensaje="Te hemos enviado un enlace para restablecer tu contrasena. Revisa tu correo (y la carpeta de spam).")
+                    mensaje="Te hemos enviado un enlace para restablecer tu contraseña. Revisa tu correo (y la carpeta de spam).")
             else:
                 return render_template('recuperar_contrasena.html',
-                    error="Hubo un error al enviar el correo. Verifica tu configuracion de email.")
+                    error="Hubo un error al enviar el correo. Verifica tu configuración de email.")
         else:
             return render_template('mensaje.html', 
-                mensaje="Si el correo existe en nuestro sistema, recibiras un enlace de recuperacion.")
+                mensaje="Si el correo existe en nuestro sistema, recibirás un enlace de recuperación.")
     
     return render_template('recuperar_contrasena.html')
 
@@ -591,7 +595,7 @@ def restablecer_contrasena(token):
     usuario_id = verificar_token(token)
     if not usuario_id:
         return render_template('mensaje.html', 
-            mensaje="Enlace invalido o expirado. Solicita uno nuevo.")
+            mensaje="Enlace inválido o expirado. Solicita uno nuevo.")
 
     if request.method == 'POST':
         nueva = request.form.get('nueva', '')
@@ -599,15 +603,15 @@ def restablecer_contrasena(token):
         
         if len(nueva) < 6:
             return render_template('restablecer_contrasena.html', 
-                error="La contrasena debe tener al menos 6 caracteres.", token=token)
+                error="La contraseña debe tener al menos 6 caracteres.", token=token)
         
         if nueva == confirmar:
             actualizar_contrasenia(usuario_id, nueva)
             return render_template('mensaje.html', 
-                mensaje="Contrasena actualizada correctamente. Ya puedes iniciar sesion.")
+                mensaje="Contraseña actualizada correctamente. Ya puedes iniciar sesión.")
         else:
             return render_template('restablecer_contrasena.html', 
-                error="Las contrasenas no coinciden.", token=token)
+                error="Las contraseñas no coinciden.", token=token)
     
     return render_template('restablecer_contrasena.html', token=token)
 
