@@ -57,19 +57,38 @@
             border-radius: 4px;
         }
 
+        .botones-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
         button {
-            width: 100%;
+            flex: 1;
             padding: 10px;
-            background-color: #4CAF50;
-            color: white;
             border: none;
             border-radius: 4px;
             font-weight: bold;
             cursor: pointer;
+            transition: all 0.3s ease;
         }
 
-        button:hover {
+        .btn-crear {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-crear:hover {
             background-color: #388E3C;
+        }
+
+        .btn-cancelar {
+            background-color: #e53935;
+            color: white;
+        }
+
+        .btn-cancelar:hover {
+            background-color: #c62828;
         }
 
         a {
@@ -86,7 +105,7 @@
         <div class="logo">UROMED</div>
         <div class="subtitle">Medico IA</div>
         <h2>CREAR CUENTA NUEVA</h2>
-        <form action="{{ url_for('crear_usuario') }}" method="POST">
+        <form action="{{ url_for('crear_usuario') }}" method="POST" id="formRegistro">
             <label>Nombre de Usuario:</label>
             <input type="text" name="username" required>
 
@@ -107,9 +126,23 @@
                 <option value="asistente">Asistente</option>
             </select>
 
-            <button type="submit">CREAR CUENTA</button>
+            <div class="botones-container">
+                <button type="submit" class="btn-crear">CREAR CUENTA</button>
+                <button type="button" class="btn-cancelar" onclick="cancelarRegistro()">CANCELAR</button>
+            </div>
         </form>
         <a href="{{ url_for('login') }}">¿Ya tienes cuenta? Haz clic Aquí</a>
     </div>
+
+    <script>
+        function cancelarRegistro() {
+            const confirmar = confirm("¿Estás seguro de que deseas cancelar la creación de la cuenta?\n\nSe perderán todos los datos ingresados y tendrás que ingresar el código de seguridad nuevamente.");
+            
+            if (confirmar) {
+                // Redirigir a la ruta que limpia el código y vuelve al login
+                window.location.href = "{{ url_for('cancelar_registro') }}";
+            }
+        }
+    </script>
 </body>
 </html>

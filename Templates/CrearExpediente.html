@@ -1,238 +1,454 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Crear Expediente</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f0fdf4;
-            padding: 30px;
+{% extends 'dashboard.html' %}
+
+{% block title %}Crear Expediente{% endblock %}
+
+{% block estilos_extra %}
+<style>
+    .container-expediente {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .titulo-principal {
+        text-align: center;
+        color: #2e7d32;
+        font-size: 2.2em;
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+
+    .subtitulo {
+        text-align: center;
+        color: #689f38;
+        font-size: 1.1em;
+        margin-bottom: 30px;
+    }
+
+    .formulario-expediente {
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        border-top: 5px solid #4CAF50;
+    }
+
+    .seccion-form {
+        margin-bottom: 40px;
+    }
+
+    .seccion-titulo {
+        color: #2e7d32;
+        font-size: 1.3em;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e8f5e9;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .grid-dos-columnas {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 25px;
+        margin-bottom: 25px;
+    }
+
+    .campo-form {
+        margin-bottom: 0;
+    }
+
+    .campo-form label {
+        display: block;
+        font-weight: 600;
+        color: #2e7d32;
+        margin-bottom: 8px;
+        font-size: 0.95em;
+    }
+
+    .campo-form label .icono {
+        margin-right: 6px;
+    }
+
+    .campo-form label .requerido {
+        color: #e53935;
+        font-size: 1.1em;
+    }
+
+    .campo-form input,
+    .campo-form textarea {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 0.95em;
+        font-family: 'Segoe UI', sans-serif;
+        transition: all 0.3s ease;
+        background-color: #fafafa;
+        box-sizing: border-box;
+    }
+
+    .campo-form input:focus,
+    .campo-form textarea:focus {
+        outline: none;
+        border-color: #4CAF50;
+        background-color: white;
+        box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+    }
+
+    .campo-form textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    /* Sección de Imagen */
+    .seccion-imagen {
+        background: linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%);
+        padding: 25px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        border: 2px dashed #81c784;
+    }
+
+    .zona-subida {
+        text-align: center;
+        padding: 20px;
+    }
+
+    .input-file-custom {
+        display: none;
+    }
+
+    .btn-subir-archivo {
+        display: inline-block;
+        background: linear-gradient(135deg, #4CAF50 0%, #2e7d32 100%);
+        color: white;
+        padding: 14px 30px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    }
+
+    .btn-subir-archivo:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+    }
+
+    .foto-preview {
+        margin-top: 15px;
+        font-size: 0.95em;
+        color: #555;
+        font-weight: 500;
+    }
+
+    .vista-previa-container {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    #imagenVistaPrevia {
+        display: none;
+        max-width: 100%;
+        max-height: 300px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        margin-top: 15px;
+    }
+
+    .btn-eliminar-foto {
+        display: inline-block;
+        background: #e53935;
+        color: white;
+        padding: 10px 25px;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: 600;
+        margin-top: 15px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(229, 57, 53, 0.3);
+    }
+
+    .btn-eliminar-foto:hover {
+        background: #c62828;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(229, 57, 53, 0.4);
+    }
+
+    /* Botones de Acción */
+    .acciones-form {
+        display: flex;
+        gap: 15px;
+        margin-top: 40px;
+        justify-content: center;
+    }
+
+    .btn-form {
+        padding: 15px 40px;
+        border: none;
+        border-radius: 30px;
+        font-size: 1.05em;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-crear {
+        background: linear-gradient(135deg, #4CAF50 0%, #2e7d32 100%);
+        color: white;
+        flex: 1;
+        max-width: 250px;
+    }
+
+    .btn-crear:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+    }
+
+    .btn-cancelar {
+        background: linear-gradient(135deg, #757575 0%, #616161 100%);
+        color: white;
+        flex: 1;
+        max-width: 250px;
+    }
+
+    .btn-cancelar:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(117, 117, 117, 0.4);
+    }
+
+    /* Indicador de campo requerido */
+    .nota-requeridos {
+        background: #fff3e0;
+        padding: 12px 20px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        border-left: 4px solid #ff9800;
+        font-size: 0.9em;
+        color: #e65100;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .grid-dos-columnas {
+            grid-template-columns: 1fr;
         }
 
-        header {
-            background-color: #4CAF50;
-            color: white;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        .formulario-expediente {
+            padding: 25px;
         }
 
-        nav {
-            background-color: #e8f5e9;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-around;
-            border-bottom: 1px solid #c8e6c9;
+        .acciones-form {
+            flex-direction: column;
         }
 
-        nav a {
-            text-decoration: none;
-            color: #2e7d32;
-            font-weight: bold;
-            font-size: 1em;
-        }
-
-        .boton-ia {
-            background-color: #f8bbd0;
-            padding: 8px 14px;
-            border-radius: 6px;
-            color: #880e4f;
-            font-weight: bold;
-            text-decoration: none;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .boton-ia::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(120deg, rgba(255,255,255,0.3), rgba(255,255,255,0));
-            transition: left 0.5s ease;
-        }
-
-        .boton-ia:hover::after {
-            left: 100%;
-        }
-
-        .boton-ia:hover {
-            box-shadow: 0 0 12px rgba(248,187,208, 0.6);
-        }
-
-        h1 {
-            text-align: center;
-            color: #2e7d32;
-            margin-top: 20px;
-        }
-
-        form {
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.1);
-            max-width: 600px;
-            margin: auto;
-        }
-
-        label {
-            display: block;
-            margin-top: 15px;
-            font-weight: bold;
-            color: #388e3c;
-        }
-
-        input, textarea {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-        }
-
-        .btn {
-            margin-top: 20px;
-            padding: 10px 15px;
-            background-color: #66bb6a;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .btn:hover {
-            background-color: #4caf50;
-        }
-
-        .acciones {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 30px;
-        }
-
-        .foto-preview {
-            margin-top: 10px;
-            font-size: 0.9em;
-            color: #555;
-        }
-
-        #imagenVistaPrevia {
-            display: none;
+        .btn-form {
             max-width: 100%;
-            margin-top: 10px;
-            border-radius: 8px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.1);
         }
+    }
+</style>
+{% endblock %}
 
-        footer {
-            background-color: #e8f5e9;
-            text-align: center;
-            padding: 15px;
-            font-size: 0.9em;
-            color: #777;
-            border-top: 1px solid #c8e6c9;
-            margin-top: 40px;
-        }
-    </style>
-</head>
-<body>
-    {% include 'dashboard.html' %}
+{% block contenido %}
+<div class="container-expediente">
+    <h1 class="titulo-principal">📋 Crear Nuevo Expediente</h1>
+    <p class="subtitulo">Completa los datos del paciente para crear un nuevo expediente médico</p>
 
-    <h1>Crear nuevo expediente</h1>
+    <form method="POST" action="{{ url_for('guardar_expediente') }}" enctype="multipart/form-data" class="formulario-expediente">
+        
+        <!-- Nota sobre campos requeridos -->
+        <div class="nota-requeridos">
+            ⚠️ Los campos marcados con <span class="requerido">*</span> son obligatorios
+        </div>
 
-    <form method="POST" action="{{ url_for('guardar_expediente') }}" enctype="multipart/form-data">
-        <label for="nombres">Nombres:</label>
-        <input type="text" name="nombres" required>
+        <!-- Sección: Datos Personales -->
+        <div class="seccion-form">
+            <h3 class="seccion-titulo">
+                <span>👤</span>
+                Datos Personales
+            </h3>
+            
+            <div class="grid-dos-columnas">
+                <div class="campo-form">
+                    <label for="nombres">
+                        <span class="icono">✏️</span>
+                        Nombres <span class="requerido">*</span>
+                    </label>
+                    <input type="text" name="nombres" id="nombres" placeholder="Ej: Juan Carlos" required>
+                </div>
 
-        <label for="apellidos">Apellidos:</label>
-        <input type="text" name="apellidos" required>
+                <div class="campo-form">
+                    <label for="apellidos">
+                        <span class="icono">✏️</span>
+                        Apellidos <span class="requerido">*</span>
+                    </label>
+                    <input type="text" name="apellidos" id="apellidos" placeholder="Ej: García López" required>
+                </div>
+            </div>
 
-        <label for="telefono">Teléfono:</label>
-        <input type="text" name="telefono">
+            <div class="grid-dos-columnas">
+                <div class="campo-form">
+                    <label for="edad">
+                        <span class="icono">🎂</span>
+                        Edad
+                    </label>
+                    <input type="number" name="edad" id="edad" placeholder="Ej: 35" min="0" max="150">
+                </div>
 
-        <label for="direccion">Dirección:</label>
-        <input type="text" name="direccion">
+                <div class="campo-form">
+                    <label for="telefono">
+                        <span class="icono">📱</span>
+                        Teléfono
+                    </label>
+                    <input type="text" name="telefono" id="telefono" placeholder="Ej: 2222-3333">
+                </div>
+            </div>
+        </div>
 
-        <label for="correo">Correo electrónico:</label>
-        <input type="email" name="correo">
+        <!-- Sección: Información de Contacto -->
+        <div class="seccion-form">
+            <h3 class="seccion-titulo">
+                <span>📬</span>
+                Información de Contacto
+            </h3>
 
-        <label for="edad">Edad:</label>
-        <input type="number" name="edad">
+            <div class="campo-form">
+                <label for="correo">
+                    <span class="icono">📧</span>
+                    Correo Electrónico
+                </label>
+                <input type="email" name="correo" id="correo" placeholder="Ej: paciente@ejemplo.com">
+            </div>
 
-        <label for="enfermedad">Enfermedad:</label>
-        <textarea name="enfermedad" rows="3"></textarea>
+            <div class="campo-form">
+                <label for="direccion">
+                    <span class="icono">🏠</span>
+                    Dirección
+                </label>
+                <input type="text" name="direccion" id="direccion" placeholder="Ej: Calle Principal #123, Colonia Centro">
+            </div>
+        </div>
 
-        <label for="imagen">Imagen (opcional):</label>
-        <input type="file" name="imagen" id="imagenInput" accept="image/*">
-        <div class="foto-preview" id="fotoPreview">Sin archivos seleccionados</div>
-        <img id="imagenVistaPrevia" src="" alt="Vista previa">
+        <!-- Sección: Información Médica -->
+        <div class="seccion-form">
+            <h3 class="seccion-titulo">
+                <span>🏥</span>
+                Información Médica
+            </h3>
 
-        <button type="button" class="btn" onclick="confirmarEliminarFoto()">Eliminar foto</button>
+            <div class="campo-form">
+                <label for="enfermedad">
+                    <span class="icono">🩺</span>
+                    Diagnóstico / Enfermedad
+                </label>
+                <textarea name="enfermedad" id="enfermedad" placeholder="Describe el diagnóstico o padecimiento del paciente..."></textarea>
+            </div>
+        </div>
 
-        <div class="acciones">
-            <button type="submit" class="btn">Crear expediente</button>
-            <button type="button" class="btn" onclick="confirmarCancelar()">Cancelar</button>
+        <!-- Sección: Imagen del Paciente -->
+        <div class="seccion-imagen">
+            <h3 class="seccion-titulo" style="border: none; padding: 0;">
+                <span>📷</span>
+                Fotografía del Paciente
+            </h3>
+            
+            <div class="zona-subida">
+                <input type="file" name="imagen" id="imagenInput" class="input-file-custom" accept="image/*">
+                <label for="imagenInput" class="btn-subir-archivo">
+                    📤 Seleccionar Imagen
+                </label>
+                <div class="foto-preview" id="fotoPreview">📁 Sin archivos seleccionados</div>
+                
+                <div class="vista-previa-container">
+                    <img id="imagenVistaPrevia" src="" alt="Vista previa">
+                    <br>
+                    <button type="button" class="btn-eliminar-foto" id="btnEliminarFoto" onclick="confirmarEliminarFoto()" style="display: none;">
+                        🗑️ Eliminar Imagen
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="acciones-form">
+            <button type="submit" class="btn-form btn-crear">
+                <span>✅</span>
+                Crear Expediente
+            </button>
+            <button type="button" class="btn-form btn-cancelar" onclick="confirmarCancelar()">
+                <span>❌</span>
+                Cancelar
+            </button>
         </div>
     </form>
+</div>
 
-    <footer>
-        &copy; 2025 UROMED - Todos los derechos reservados
-    </footer>
+<script>
+    const imagenInput = document.getElementById('imagenInput');
+    const fotoPreview = document.getElementById('fotoPreview');
+    const imagenVistaPrevia = document.getElementById('imagenVistaPrevia');
+    const btnEliminarFoto = document.getElementById('btnEliminarFoto');
 
-    <script>
-        function manejarClickCrearExpediente() {
-            alert("Ya estás en el apartado de 'Crear expediente'.");
-            return false;
+    imagenInput.addEventListener('change', function () {
+        if (imagenInput.files.length > 0) {
+            const archivo = imagenInput.files[0];
+            fotoPreview.innerHTML = '✅ ' + archivo.name;
+
+            const lector = new FileReader();
+            lector.onload = function (e) {
+                imagenVistaPrevia.src = e.target.result;
+                imagenVistaPrevia.style.display = 'block';
+                btnEliminarFoto.style.display = 'inline-block';
+            };
+            lector.readAsDataURL(archivo);
+        } else {
+            resetearImagen();
+        }
+    });
+
+    function resetearImagen() {
+        fotoPreview.innerHTML = '📁 Sin archivos seleccionados';
+        imagenVistaPrevia.style.display = 'none';
+        imagenVistaPrevia.src = '';
+        btnEliminarFoto.style.display = 'none';
+    }
+
+    function confirmarCancelar() {
+        const confirmar = confirm("¿Estás seguro de que deseas cancelar?\n\nSe perderán todos los datos ingresados.");
+        if (confirmar) {
+            window.location.href = "{{ url_for('inicio') }}";
+        }
+    }
+
+    function confirmarEliminarFoto() {
+        if (imagenInput.files.length === 0) {
+            alert("No hay ninguna imagen seleccionada.");
+            return;
         }
 
-        const imagenInput = document.getElementById('imagenInput');
-        const fotoPreview = document.getElementById('fotoPreview');
-        const imagenVistaPrevia = document.getElementById('imagenVistaPrevia');
-
-        imagenInput.addEventListener('change', function () {
-            if (imagenInput.files.length > 0) {
-                const archivo = imagenInput.files[0];
-                fotoPreview.textContent = archivo.name;
-
-                const lector = new FileReader();
-                lector.onload = function (e) {
-                    imagenVistaPrevia.src = e.target.result;
-                    imagenVistaPrevia.style.display = 'block';
-                };
-                lector.readAsDataURL(archivo);
-            } else {
-                fotoPreview.textContent = 'Sin archivos seleccionados';
-                imagenVistaPrevia.style.display = 'none';
-                imagenVistaPrevia.src = '';
-            }
-        });
-
-        function confirmarCancelar() {
-            const confirmar = confirm("¿Estás seguro de que deseas cancelar el expediente?\nSe perderán los datos ingresados.");
-            if (confirmar) {
-                window.location.href = "{{ url_for('inicio') }}";
-            }
+        const confirmar = confirm("¿Deseas eliminar la imagen seleccionada?");
+        if (confirmar) {
+            imagenInput.value = "";
+            resetearImagen();
         }
+    }
 
-        function confirmarEliminarFoto() {
-            if (imagenInput.files.length === 0) {
-                alert("No hay ninguna imagen seleccionada.");
-                return;
-            }
+    // Validación antes de enviar
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const nombres = document.getElementById('nombres').value.trim();
+        const apellidos = document.getElementById('apellidos').value.trim();
 
-            const confirmar = confirm("¿Deseas eliminar la imagen seleccionada?");
-            if (confirmar) {
-                imagenInput.value = "";
-                fotoPreview.textContent = "Sin archivos seleccionados";
-                imagenVistaPrevia.style.display = 'none';
-                imagenVistaPrevia.src = '';
-            }
+        if (!nombres || !apellidos) {
+            e.preventDefault();
+            alert('⚠️ Por favor completa los campos obligatorios (Nombres y Apellidos)');
         }
-    </script>
-</body>
-</html>
+    });
+</script>
+{% endblock %}

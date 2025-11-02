@@ -19,7 +19,12 @@ app.secret_key = 'clave_secreta_segura'
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+# ==========================================
+# FUNCIONES DE CONEXIÓN Y UTILIDADES
+# ==========================================
+
 def conectar_sql():
+    """Conecta con la base de datos SQL Server"""
     return pyodbc.connect(
         "DRIVER={ODBC Driver 18 for SQL Server};"
         "SERVER=DESKTOP-IFV9P3G\\SQLEXPRESS;"
@@ -28,8 +33,26 @@ def conectar_sql():
         "TrustServerCertificate=yes;"
     )
 
+# ✨ NUEVO: Función para verificar el código de acceso
+def verificar_codigo_sistema(codigo_ingresado):
+    """Verifica si el código ingresado es válido contra la base de datos"""
+    conn = conectar_sql()
+    cursor = conn.cursor()
+    cursor.execute("SELECT codigo_hash FROM codigos_acceso WHERE activo = 1")
+    resultado = cursor.fetchone()
+    conn.close()
+    
+    if resultado:
+        return check_password_hash(resultado[0], codigo_ingresado)
+    return False
+
+# ==========================================
+# RUTAS PRINCIPALES - EXPEDIENTES
+# ==========================================
+
 @app.route('/')
 def inicio():
+    """Página principal - Muestra lista de expedientes"""
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
 
@@ -56,6 +79,7 @@ def inicio():
 
 @app.route('/buscar_expediente')
 def buscar_expediente():
+    """Busca expedientes por nombre, apellido o enfermedad"""
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
 
@@ -64,7 +88,6 @@ def buscar_expediente():
     conn = conectar_sql()
     cursor = conn.cursor()
     
-    # ✅ CORREGIDO: Ahora busca en columnas individuales Y en concatenación completa
     cursor.execute("""
         SELECT id, nombres, apellidos, enfermedad
         FROM expedientes
@@ -93,9 +116,9 @@ def buscar_expediente():
                            query=query,
                            fecha_actual=fecha_actual)
 
-
 @app.route('/sugerencias')
 def sugerencias():
+    """API para autocompletado de búsqueda"""
     if 'usuario_id' not in session:
         return jsonify([])
 
@@ -107,7 +130,6 @@ def sugerencias():
         conn = conectar_sql()
         cursor = conn.cursor()
         
-        # ✅ CORREGIDO: Ahora también busca en concatenación completa
         cursor.execute("""
             SELECT TOP 10 nombres, apellidos, enfermedad
             FROM expedientes
@@ -131,14 +153,20 @@ def sugerencias():
 
     return jsonify(sugerencias)
 
+# ==========================================
+# CRUD DE EXPEDIENTES
+# ==========================================
+
 @app.route('/crear_expediente')
 def crear_expediente():
+    """Muestra formulario para crear nuevo expediente"""
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
     return render_template('CrearExpediente.html')
 
 @app.route('/guardar_expediente', methods=['POST'])
 def guardar_expediente():
+    """Guarda un nuevo expediente en la base de datos"""
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
 
@@ -170,6 +198,7 @@ def guardar_expediente():
 
 @app.route('/ver_expediente/<int:id>')
 def ver_expediente(id):
+    """Muestra los detalles completos de un expediente"""
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
 
@@ -197,6 +226,7 @@ def ver_expediente(id):
 
 @app.route('/modificar_expediente/<int:id>')
 def modificar_expediente(id):
+    """Muestra formulario para modificar un expediente existente"""
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
 
@@ -224,6 +254,7 @@ def modificar_expediente(id):
 
 @app.route('/actualizar_expediente/<int:id>', methods=['POST'])
 def actualizar_expediente(id):
+    """Actualiza los datos de un expediente existente"""
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
 
@@ -261,6 +292,7 @@ def actualizar_expediente(id):
 
 @app.route('/eliminar_expediente/<int:id>')
 def eliminar_expediente(id):
+    """Elimina un expediente de la base de datos"""
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
 
@@ -280,8 +312,13 @@ def eliminar_expediente(id):
 
     return redirect(url_for('inicio'))
 
+# ==========================================
+# HISTORIAL DE EXPEDIENTES
+# ==========================================
+
 @app.route('/historial')
 def historial():
+    """Muestra el historial de expedientes con filtros"""
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
 
@@ -347,8 +384,13 @@ def historial():
                            fecha_hasta=fecha_hasta,
                            buscar=buscar)
 
+# ==========================================
+# GESTIÓN DE PERFIL DE USUARIO
+# ==========================================
+
 @app.route('/perfil')
 def perfil():
+    """Muestra el perfil del usuario actual"""
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
 
@@ -375,6 +417,7 @@ def perfil():
 
 @app.route('/actualizar_correo', methods=['POST'])
 def actualizar_correo():
+    """Actualiza el correo electrónico del usuario"""
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
 
@@ -391,6 +434,7 @@ def actualizar_correo():
 
 @app.route('/actualizar_contrasena', methods=['POST'])
 def actualizar_contrasena():
+    """Actualiza la contraseña del usuario"""
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
 
@@ -408,6 +452,7 @@ def actualizar_contrasena():
 
 @app.route('/actualizar_descripcion', methods=['POST'])
 def actualizar_descripcion():
+    """Actualiza la descripción/recordatorio del usuario"""
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
 
@@ -424,6 +469,7 @@ def actualizar_descripcion():
 
 @app.route('/subir_foto', methods=['POST'])
 def subir_foto():
+    """Sube una nueva foto de perfil del usuario"""
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
 
@@ -442,12 +488,52 @@ def subir_foto():
 
     return redirect(url_for('perfil'))
 
+# ==========================================
+# ✨ VERIFICACIÓN DE CÓDIGO Y REGISTRO
+# ==========================================
+
+@app.route('/verificar_codigo')
+def verificar_codigo():
+    """Muestra el formulario de verificación de código de acceso"""
+    return render_template('verificar_codigo.html')
+
+@app.route('/verificar_codigo_acceso', methods=['POST'])
+def verificar_codigo_acceso():
+    """Procesa la verificación del código de acceso"""
+    codigo = request.form.get('codigo', '').strip()
+    
+    if verificar_codigo_sistema(codigo):
+        # Código correcto - guardar en sesión y redirigir a registro
+        session['codigo_verificado'] = True
+        return redirect(url_for('registro'))
+    else:
+        # Código incorrecto
+        return render_template('verificar_codigo.html', 
+            error='❌ Código de acceso incorrecto. Inténtalo nuevamente.')
+
 @app.route('/registro')
 def registro():
+    """Muestra el formulario de registro (requiere código válido)"""
+    # Verificar que el código haya sido validado
+    if not session.get('codigo_verificado'):
+        return redirect(url_for('verificar_codigo'))
     return render_template('registro.html')
+
+@app.route('/cancelar_registro')
+def cancelar_registro():
+    """Cancela el registro y limpia la verificación del código"""
+    # Limpiar la verificación de código
+    session.pop('codigo_verificado', None)
+    # Redirigir al login
+    return redirect(url_for('login'))
 
 @app.route('/crear_usuario', methods=['POST'])
 def crear_usuario():
+    """Crea un nuevo usuario en la base de datos"""
+    # Verificar que el código haya sido validado
+    if not session.get('codigo_verificado'):
+        return redirect(url_for('verificar_codigo'))
+    
     username = request.form.get('username')
     email = request.form.get('email')
     password = request.form.get('password')
@@ -468,14 +554,23 @@ def crear_usuario():
     conn.commit()
     conn.close()
 
+    # Limpiar la verificación de código después de crear usuario
+    session.pop('codigo_verificado', None)
+    
     return redirect(url_for('login'))
+
+# ==========================================
+# AUTENTICACIÓN - LOGIN Y LOGOUT
+# ==========================================
 
 @app.route('/login')
 def login():
+    """Muestra el formulario de inicio de sesión"""
     return render_template('login.html')
 
 @app.route('/acceder', methods=['POST'])
 def acceder():
+    """Procesa el inicio de sesión del usuario"""
     username = request.form.get('username')
     password = request.form.get('password')
     rol = request.form.get('rol')
@@ -496,10 +591,16 @@ def acceder():
 
 @app.route('/logout')
 def logout():
+    """Cierra la sesión del usuario"""
     session.clear()
     return redirect(url_for('login'))
 
+# ==========================================
+# RECUPERACIÓN DE CONTRASEÑA
+# ==========================================
+
 def buscar_usuario_por_correo(correo):
+    """Busca un usuario por su correo electrónico"""
     conn = conectar_sql()
     cursor = conn.cursor()
     cursor.execute("SELECT id FROM usuarios WHERE email = ?", (correo,))
@@ -510,10 +611,12 @@ def buscar_usuario_por_correo(correo):
     return None
 
 def generar_token_seguro(usuario_id):
+    """Genera un token seguro para recuperación de contraseña"""
     s = URLSafeTimedSerializer(app.secret_key)
     return s.dumps(usuario_id, salt='password-reset-salt')
 
 def verificar_token(token, max_age=3600):
+    """Verifica si un token de recuperación es válido"""
     s = URLSafeTimedSerializer(app.secret_key)
     try:
         usuario_id = s.loads(token, salt='password-reset-salt', max_age=max_age)
@@ -522,6 +625,7 @@ def verificar_token(token, max_age=3600):
         return None
 
 def enviar_correo_recuperacion(correo, enlace):
+    """Envía un correo con el enlace de recuperación de contraseña"""
     cuerpo = f"""Hola,
 
 Has solicitado restablecer tu contraseña en UROMED.
@@ -557,6 +661,7 @@ Equipo UROMED
         return False
 
 def actualizar_contrasenia(usuario_id, nueva_contrasenia):
+    """Actualiza la contraseña de un usuario"""
     nueva_hash = generate_password_hash(nueva_contrasenia)
     conn = conectar_sql()
     cursor = conn.cursor()
@@ -566,6 +671,7 @@ def actualizar_contrasenia(usuario_id, nueva_contrasenia):
 
 @app.route('/recuperar_contrasena', methods=['GET', 'POST'])
 def recuperar_contrasena():
+    """Solicita la recuperación de contraseña"""
     if request.method == 'POST':
         correo = request.form.get('correo', '').strip()
         
@@ -592,6 +698,7 @@ def recuperar_contrasena():
 
 @app.route('/restablecer_contrasena/<token>', methods=['GET', 'POST'])
 def restablecer_contrasena(token):
+    """Restablece la contraseña usando el token"""
     usuario_id = verificar_token(token)
     if not usuario_id:
         return render_template('mensaje.html', 
@@ -614,6 +721,10 @@ def restablecer_contrasena(token):
                 error="Las contraseñas no coinciden.", token=token)
     
     return render_template('restablecer_contrasena.html', token=token)
+
+# ==========================================
+# EJECUTAR APLICACIÓN
+# ==========================================
 
 if __name__ == '__main__':
     app.run(debug=True)

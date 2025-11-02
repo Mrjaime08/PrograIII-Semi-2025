@@ -32,6 +32,16 @@
             color: #2e7d32;
             font-weight: bold;
             font-size: 1em;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        /* ✅ EFECTO HOVER PARA LOS ENLACES DEL NAV */
+        nav a:hover {
+            background-color: #c8e6c9;
+            box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
+            transform: translateY(-2px);
         }
 
         .boton-ia {
@@ -64,6 +74,7 @@
 
         .boton-ia:hover {
             box-shadow: 0 0 12px rgba(248,187,208, 0.6);
+            transform: translateY(-2px);
         }
 
         main {
@@ -117,18 +128,25 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 0.9em;
+            transition: all 0.3s ease;
         }
 
+        /* ✅ EFECTO HOVER PARA BOTONES NORMALES */
         .btn:hover {
             background-color: #4caf50;
+            box-shadow: 0 2px 6px rgba(76, 175, 80, 0.4);
+            transform: translateY(-2px);
         }
 
         .btn-eliminar {
             background-color: #e53935;
         }
 
+        /* ✅ EFECTO HOVER PARA BOTÓN ELIMINAR */
         .btn-eliminar:hover {
             background-color: #c62828;
+            box-shadow: 0 2px 6px rgba(229, 57, 53, 0.4);
+            transform: translateY(-2px);
         }
 
         footer {
@@ -150,6 +168,14 @@
             width: 60%;
             border-radius: 4px;
             border: 1px solid #ccc;
+            transition: all 0.3s ease;
+        }
+
+        /* ✅ EFECTO FOCUS PARA EL INPUT DE BÚSQUEDA */
+        .buscador input:focus {
+            outline: none;
+            border-color: #66bb6a;
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
         }
 
         .buscador button {
@@ -178,6 +204,7 @@
             padding: 8px;
             cursor: pointer;
             font-family: 'Segoe UI';
+            transition: background-color 0.2s ease;
         }
 
         .sugerencias li:hover {
