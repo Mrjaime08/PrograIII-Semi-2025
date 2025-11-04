@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from datetime import datetime
@@ -14,10 +14,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = 'clave_secreta_segura'
+app.secret_key = 'clave_secreta_segura_uromed_2025'
 
 UPLOAD_FOLDER = 'static/uploads'
+PERFILES_FOLDER = 'static/perfiles'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Crear directorios si no existen
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(PERFILES_FOLDER, exist_ok=True)
 
 # ==========================================
 # FUNCIONES DE CONEXIÓN Y UTILIDADES
@@ -25,26 +30,44 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 def conectar_sql():
     """Conecta con la base de datos SQL Server"""
-    return pyodbc.connect(
-        "DRIVER={ODBC Driver 18 for SQL Server};"
-        "SERVER=DESKTOP-IFV9P3G\\SQLEXPRESS;"
-        "DATABASE=UROMED;"
-        "Trusted_Connection=yes;"
-        "TrustServerCertificate=yes;"
-    )
+    try:
+        conn = pyodbc.connect(
+            "DRIVER={ODBC Driver 18 for SQL Server};"
+            "SERVER=DESKTOP-IFV9P3G\\SQLEXPRESS;"
+            "DATABASE=UROMED;"
+            "Trusted_Connection=yes;"
+            "TrustServerCertificate=yes;"
+        )
+        return conn
+    except pyodbc.Error as e:
+        print(f"❌ Error de conexión: {e}")
+        return None
 
-# ✨ NUEVO: Función para verificar el código de acceso
 def verificar_codigo_sistema(codigo_ingresado):
     """Verifica si el código ingresado es válido contra la base de datos"""
     conn = conectar_sql()
+    if not conn:
+        return False
+        
     cursor = conn.cursor()
-    cursor.execute("SELECT codigo_hash FROM codigos_acceso WHERE activo = 1")
-    resultado = cursor.fetchone()
-    conn.close()
-    
-    if resultado:
-        return check_password_hash(resultado[0], codigo_ingresado)
-    return False
+    try:
+        cursor.execute("SELECT codigo_hash FROM codigos_acceso WHERE activo = 1")
+        resultado = cursor.fetchone()
+        
+        if resultado:
+            # SOLUCIÓN CORRECTA: Usar check_password_hash para comparar el hash
+            es_valido = check_password_hash(resultado[0], codigo_ingresado)
+            if es_valido:
+                print(f"✅ Código correcto!")
+            else:
+                print(f"❌ Código incorrecto")
+            return es_valido
+        return False
+    except pyodbc.Error as e:
+        print(f"❌ Error al verificar código: {e}")
+        return False
+    finally:
+        conn.close()
 
 # ==========================================
 # RUTAS PRINCIPALES - EXPEDIENTES
@@ -57,6 +80,9 @@ def inicio():
         return redirect(url_for('login'))
 
     conn = conectar_sql()
+    if not conn:
+        return "Error de conexión a la base de datos", 500
+        
     cursor = conn.cursor()
     cursor.execute("SELECT id, nombres, apellidos, enfermedad FROM expedientes")
     expedientes = cursor.fetchall()
@@ -86,6 +112,9 @@ def buscar_expediente():
     query = request.args.get('query', '').strip()
 
     conn = conectar_sql()
+    if not conn:
+        return "Error de conexión", 500
+        
     cursor = conn.cursor()
     
     cursor.execute("""
@@ -186,6 +215,9 @@ def guardar_expediente():
         imagen_file.save(imagen_path)
 
     conn = conectar_sql()
+    if not conn:
+        return "Error de conexión", 500
+        
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO expedientes (nombres, apellidos, telefono, direccion, correo, edad, enfermedad, imagen)
@@ -203,6 +235,9 @@ def ver_expediente(id):
         return redirect(url_for('login'))
 
     conn = conectar_sql()
+    if not conn:
+        return "Error de conexión", 500
+        
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM expedientes WHERE id = ?", (id,))
     fila = cursor.fetchone()
@@ -231,6 +266,9 @@ def modificar_expediente(id):
         return redirect(url_for('login'))
 
     conn = conectar_sql()
+    if not conn:
+        return "Error de conexión", 500
+        
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM expedientes WHERE id = ?", (id,))
     fila = cursor.fetchone()
@@ -268,10 +306,14 @@ def actualizar_expediente(id):
     imagen_file = request.files.get('imagen')
 
     conn = conectar_sql()
+    if not conn:
+        return "Error de conexión", 500
+        
     cursor = conn.cursor()
 
     cursor.execute("SELECT imagen FROM expedientes WHERE id = ?", (id,))
-    imagen_actual = cursor.fetchone()[0]
+    resultado = cursor.fetchone()
+    imagen_actual = resultado[0] if resultado else None
 
     if imagen_file and imagen_file.filename:
         imagen_nombre = secure_filename(imagen_file.filename)
@@ -297,6 +339,9 @@ def eliminar_expediente(id):
         return redirect(url_for('login'))
 
     conn = conectar_sql()
+    if not conn:
+        return "Error de conexión", 500
+        
     cursor = conn.cursor()
 
     cursor.execute("SELECT imagen FROM expedientes WHERE id = ?", (id,))
@@ -327,6 +372,9 @@ def historial():
     buscar = request.args.get('buscar', '').strip()
 
     conn = conectar_sql()
+    if not conn:
+        return "Error de conexión", 500
+        
     cursor = conn.cursor()
 
     query = """
@@ -396,6 +444,9 @@ def perfil():
 
     usuario_id = session['usuario_id']
     conn = conectar_sql()
+    if not conn:
+        return "Error de conexión", 500
+        
     cursor = conn.cursor()
     cursor.execute("""
         SELECT username, email, rol, descripcion, foto_perfil 
@@ -425,6 +476,9 @@ def actualizar_correo():
     usuario_id = session['usuario_id']
 
     conn = conectar_sql()
+    if not conn:
+        return "Error de conexión", 500
+        
     cursor = conn.cursor()
     cursor.execute("UPDATE usuarios SET email = ? WHERE id = ?", (nuevo_correo, usuario_id))
     conn.commit()
@@ -443,6 +497,9 @@ def actualizar_contrasena():
     usuario_id = session['usuario_id']
 
     conn = conectar_sql()
+    if not conn:
+        return "Error de conexión", 500
+        
     cursor = conn.cursor()
     cursor.execute("UPDATE usuarios SET password_hash = ? WHERE id = ?", (password_hash, usuario_id))
     conn.commit()
@@ -460,6 +517,9 @@ def actualizar_descripcion():
     usuario_id = session['usuario_id']
 
     conn = conectar_sql()
+    if not conn:
+        return "Error de conexión", 500
+        
     cursor = conn.cursor()
     cursor.execute("UPDATE usuarios SET descripcion = ? WHERE id = ?", (nueva_descripcion, usuario_id))
     conn.commit()
@@ -481,12 +541,124 @@ def subir_foto():
 
         usuario_id = session['usuario_id']
         conn = conectar_sql()
+        if not conn:
+            return "Error de conexión", 500
+            
         cursor = conn.cursor()
         cursor.execute("UPDATE usuarios SET foto_perfil = ? WHERE id = ?", (nombre_seguro, usuario_id))
         conn.commit()
         conn.close()
 
     return redirect(url_for('perfil'))
+
+# ==========================================
+# 🎯 GESTIÓN DE USUARIOS - SUPER ADMINISTRADOR
+# ==========================================
+
+@app.route('/gestion_usuarios')
+def gestion_usuarios():
+    """Gestión de usuarios - Solo para Super Administrador"""
+    if 'usuario_id' not in session:
+        return redirect(url_for('login'))
+    
+    # Verificar que sea Super Administrador
+    if session.get('rol') != 'Super Administrador':
+        return redirect(url_for('inicio'))
+    
+    conn = conectar_sql()
+    if not conn:
+        return "Error de conexión a la base de datos", 500
+        
+    cursor = conn.cursor()
+    
+    # Obtener todos los usuarios
+    cursor.execute("""
+        SELECT id, username, email, rol, activo, fecha_creacion, descripcion, foto_perfil
+        FROM usuarios 
+        ORDER BY fecha_creacion DESC
+    """)
+    usuarios = cursor.fetchall()
+    
+    conn.close()
+
+    return render_template('gestion_usuarios.html', 
+                         usuarios=usuarios,
+                         usuario=session.get('username'),
+                         rol=session.get('rol'))
+
+@app.route('/activar_usuario/<int:usuario_id>')
+def activar_usuario(usuario_id):
+    """Activa un usuario deshabilitado"""
+    if 'usuario_id' not in session or session.get('rol') != 'Super Administrador':
+        return redirect(url_for('login'))
+    
+    conn = conectar_sql()
+    if not conn:
+        return "Error de conexión", 500
+        
+    cursor = conn.cursor()
+    cursor.execute("UPDATE usuarios SET activo = 1 WHERE id = ?", (usuario_id,))
+    conn.commit()
+    conn.close()
+    
+    flash('Usuario activado correctamente', 'success')
+    return redirect(url_for('gestion_usuarios'))
+
+@app.route('/desactivar_usuario/<int:usuario_id>')
+def desactivar_usuario(usuario_id):
+    """Desactiva un usuario (eliminación lógica)"""
+    if 'usuario_id' not in session or session.get('rol') != 'Super Administrador':
+        return redirect(url_for('login'))
+    
+    # Prevenir que el Super Admin se desactive a sí mismo
+    if usuario_id == session.get('usuario_id'):
+        flash('No puedes desactivar tu propia cuenta', 'error')
+        return redirect(url_for('gestion_usuarios'))
+    
+    conn = conectar_sql()
+    if not conn:
+        return "Error de conexión", 500
+        
+    cursor = conn.cursor()
+    cursor.execute("UPDATE usuarios SET activo = 0 WHERE id = ?", (usuario_id,))
+    conn.commit()
+    conn.close()
+    
+    flash('Usuario desactivado correctamente', 'success')
+    return redirect(url_for('gestion_usuarios'))
+
+@app.route('/eliminar_usuario/<int:usuario_id>')
+def eliminar_usuario(usuario_id):
+    """Elimina permanentemente un usuario"""
+    if 'usuario_id' not in session or session.get('rol') != 'Super Administrador':
+        return redirect(url_for('login'))
+    
+    # Prevenir eliminaciones críticas
+    if usuario_id == session.get('usuario_id'):
+        flash('No puedes eliminar tu propia cuenta', 'error')
+        return redirect(url_for('gestion_usuarios'))
+    
+    conn = conectar_sql()
+    if not conn:
+        return "Error de conexión", 500
+        
+    cursor = conn.cursor()
+    
+    # Verificar que no sea Super Administrador
+    cursor.execute("SELECT rol FROM usuarios WHERE id = ?", (usuario_id,))
+    usuario = cursor.fetchone()
+    
+    if usuario and usuario[0] == 'Super Administrador':
+        flash('No se pueden eliminar Super Administradores', 'error')
+        return redirect(url_for('gestion_usuarios'))
+    
+    # Eliminar usuario
+    cursor.execute("DELETE FROM usuarios WHERE id = ?", (usuario_id,))
+    conn.commit()
+    conn.close()
+    
+    flash('Usuario eliminado correctamente', 'success')
+    return redirect(url_for('gestion_usuarios'))
 
 # ==========================================
 # ✨ VERIFICACIÓN DE CÓDIGO Y REGISTRO
@@ -543,13 +715,27 @@ def crear_usuario():
     if password != confirm_password:
         return "Las contraseñas no coinciden", 400
 
+    # Prevenir creación de Super Administradores desde el registro
+    if rol == "Super Administrador":
+        return "No se pueden crear Super Administradores desde el registro", 400
+
     password_hash = generate_password_hash(password)
 
     conn = conectar_sql()
+    if not conn:
+        return "Error de conexión", 500
+        
     cursor = conn.cursor()
+    
+    # Verificar si el usuario ya existe
+    cursor.execute("SELECT id FROM usuarios WHERE username = ? OR email = ?", (username, email))
+    if cursor.fetchone():
+        conn.close()
+        return "El usuario o email ya existe", 400
+
     cursor.execute("""
-        INSERT INTO usuarios (username, email, password_hash, rol)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO usuarios (username, email, password_hash, rol, activo, fecha_creacion)
+        VALUES (?, ?, ?, ?, 1, GETDATE())
     """, (username, email, password_hash, rol))
     conn.commit()
     conn.close()
@@ -576,6 +762,9 @@ def acceder():
     rol = request.form.get('rol')
 
     conn = conectar_sql()
+    if not conn:
+        return render_template("login.html", error=True)
+        
     cursor = conn.cursor()
     cursor.execute("SELECT id, username, password_hash, rol FROM usuarios WHERE username = ?", (username,))
     usuario = cursor.fetchone()
@@ -602,6 +791,9 @@ def logout():
 def buscar_usuario_por_correo(correo):
     """Busca un usuario por su correo electrónico"""
     conn = conectar_sql()
+    if not conn:
+        return None
+        
     cursor = conn.cursor()
     cursor.execute("SELECT id FROM usuarios WHERE email = ?", (correo,))
     resultado = cursor.fetchone()
@@ -664,6 +856,9 @@ def actualizar_contrasenia(usuario_id, nueva_contrasenia):
     """Actualiza la contraseña de un usuario"""
     nueva_hash = generate_password_hash(nueva_contrasenia)
     conn = conectar_sql()
+    if not conn:
+        return
+        
     cursor = conn.cursor()
     cursor.execute("UPDATE usuarios SET password_hash = ? WHERE id = ?", (nueva_hash, usuario_id))
     conn.commit()
@@ -722,9 +917,22 @@ def restablecer_contrasena(token):
     
     return render_template('restablecer_contrasena.html', token=token)
 
+
 # ==========================================
 # EJECUTAR APLICACIÓN
 # ==========================================
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    print("🚀 Iniciando UROMED MedicoIA...")
+    print("📧 Configuración de email cargada:", "✅" if os.getenv('EMAIL_REMITENTE') else "❌")
+    print("🗄️ Conectando a base de datos...")
+    
+    # Probar conexión
+    conn = conectar_sql()
+    if conn:
+        print("✅ Conexión a BD exitosa")
+        conn.close()
+    else:
+        print("❌ Error en conexión a BD")
+    
+    app.run(debug=True, host='0.0.0.0', port=5000)

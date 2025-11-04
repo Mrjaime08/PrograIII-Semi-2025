@@ -141,26 +141,26 @@
         <div class="subtitle">Medico IA</div>
         <h2>INICIAR SESIÓN</h2>
         <form action="{{ url_for('acceder') }}" method="POST">
-    <label>Nombre de usuario:</label>
-    <input type="text" name="username" required>
+            <label>Nombre de usuario:</label>
+            <input type="text" name="username" required>
 
-    <label>Contraseña:</label>
-    <input type="password" name="password" required>
+            <label>Contraseña:</label>
+            <input type="password" name="password" required>
 
-    <label>Rol:</label>
-    <select name="rol" required>
-        <option value="">Seleccione su rol</option>
-        <option value="doctor">Doctor</option>
-        <option value="enfermero">Enfermer@</option>
-        <option value="asistente">Asistente</option>
-    </select>
+            <label>Rol:</label>
+            <select name="rol" required>
+                <option value="">Seleccione su rol</option>
+                <option value="Super Administrador">Super Administrador</option>
+                <option value="doctor">Doctor</option>
+                <option value="enfermero">Enfermer@</option>
+                <option value="asistente">Asistente</option>
+            </select>
 
-    <button type="submit">ACCEDER</button>
-</form>
+            <button type="submit">ACCEDER</button>
+        </form>
 
- 
-<a href="{{ url_for('registro') }}">¿No tienes cuenta? Haz clic Aquí</a>
-<a href="{{ url_for('recuperar_contrasena') }}">¿Olvidaste tu contraseña? Haz clic aquí</a>
+        <a href="{{ url_for('registro') }}">¿No tienes cuenta? Haz clic Aquí</a>
+        <a href="{{ url_for('recuperar_contrasena') }}">¿Olvidaste tu contraseña? Haz clic aquí</a>
     </div>
 
     <!-- Modal de error -->

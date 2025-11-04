@@ -54,6 +54,25 @@
             background-color: #c8e6c9;
         }
 
+        /* NUEVO ESTILO: Botón de Gestión de Usuarios (Solo Super Admin) */
+        .boton-gestion {
+            background-color: #ff9800;
+            padding: 8px 14px;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+            text-decoration: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 2px solid #ff9800;
+        }
+
+        .boton-gestion:hover {
+            background-color: #f57c00;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(255, 152, 0, 0.3);
+        }
+
         .boton-ia {
             background-color: #f8bbd0;
             padding: 8px 14px;
@@ -99,6 +118,18 @@
             text-align: center;
         }
 
+        /* NUEVO: Indicador de rol Super Admin */
+        .badge-superadmin {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-left: 10px;
+            display: inline-block;
+        }
+
         footer {
             background-color: #e8f5e9;
             text-align: center;
@@ -123,12 +154,25 @@
         <a href="{{ url_for('inicio') }}">🏠 Inicio</a>
         <a href="{{ url_for('crear_expediente') }}">📝 Crear expediente</a>
         <a href="{{ url_for('historial') }}">📋 Historial</a>
+        
+        <!-- NUEVO: Gestión de Usuarios - Solo visible para Super Administrador -->
+        {% if session.get('rol') == 'Super Administrador' %}
+        <a href="{{ url_for('gestion_usuarios') }}" class="boton-gestion">👥 Gestión Usuarios</a>
+        {% endif %}
+        
         <a href="{{ url_for('perfil') }}">👤 Mi perfil</a>
         <a href="#" class="boton-ia">🤖 IA Diagnóstica</a>
     </nav>
 
     {% if usuario and rol %}
-        <div class="bienvenida">Bienvenido, {{ usuario }} ({{ rol }})</div>
+        <div class="bienvenida">
+            Bienvenido, {{ usuario }} 
+            {% if rol == 'Super Administrador' %}
+                <span class="badge-superadmin">👑 {{ rol }}</span>
+            {% else %}
+                ({{ rol }})
+            {% endif %}
+        </div>
     {% endif %}
 
     <main>
